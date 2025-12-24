@@ -1,5 +1,5 @@
 import { VerificationMethod } from 'did-resolver'
-import { computeAddress, getAddress, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
+import { computeAddress, getAddress, keccak256, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -152,4 +152,20 @@ export enum Errors {
  */
 export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
   return arg !== null && typeof arg !== 'undefined'
+}
+
+/**
+ * Derives an Ethereum address from a BLS12-381 public key.
+ * The address is computed as the last 20 bytes of keccak256(publicKey).
+ *
+ * @param publicKey - A 96-byte BLS12-381 G2 public key
+ * @returns A checksummed Ethereum address
+ * @throws Error if the public key length is not 96 bytes
+ */
+export function publicKeyToAddress(publicKey: Uint8Array): string {
+  if (publicKey.length !== 96) {
+    throw new Error(`Invalid BLS public key length: expected 96 bytes, got ${publicKey.length}`)
+  }
+  const hash = keccak256(publicKey)
+  return getAddress('0x' + hash.slice(-40))
 }

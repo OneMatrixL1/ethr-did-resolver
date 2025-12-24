@@ -1,6 +1,7 @@
 import {
   Addressable,
   AddressLike,
+  AbiCoder,
   BlockTag,
   concat,
   Contract,
@@ -25,6 +26,7 @@ import {
   interpretIdentifier,
   MESSAGE_PREFIX,
   MetaSignature,
+  publicKeyToAddress,
   stringToBytes32,
 } from './helpers.js'
 
@@ -164,6 +166,100 @@ export class EthrDidController {
       overrides
     )
     return await ownerChange.wait()
+  }
+
+  /**
+   * Creates the EIP-712 hash for a changeOwnerWithPubkey operation.
+   * This hash is what gets signed by the BLS keypair.
+   *
+   * @param newOwner - The new owner address
+   * @param publicKey - The BLS12-381 public key (96 bytes)
+   * @returns The EIP-712 hash ready for signing
+   */
+  async createChangeOwnerWithPubkeyHash(newOwner: address, publicKey: Uint8Array): Promise<string> {
+    const signer = publicKeyToAddress(publicKey)
+    const nonce = await this.contract.pubkeyNonce(signer)
+    const registryAddress = await this.contract.getAddress()
+
+    // Get chain ID
+    const provider = this.contract.runner?.provider
+    if (!provider) throw new Error('No provider configured')
+    const network = await provider.getNetwork()
+    const chainId = network.chainId
+
+    // Build the message
+    const message = {
+      identity: this.address,
+      signer,
+      newOwner,
+      nonce,
+    }
+
+    // Compute the hash using EIP-712
+    const coder = AbiCoder.defaultAbiCoder()
+    const typeHash = keccak256(
+      toUtf8Bytes('ChangeOwnerWithPubkey(address identity,address signer,address newOwner,uint256 nonce)')
+    )
+    const structHash = keccak256(
+      coder.encode(
+        ['bytes32', 'address', 'address', 'address', 'uint256'],
+        [typeHash, message.identity, message.signer, message.newOwner, message.nonce]
+      )
+    )
+
+    const domainSeparator = keccak256(
+      coder.encode(
+        ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+        [
+          keccak256(toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
+          keccak256(toUtf8Bytes('EthereumDIDRegistry')),
+          keccak256(toUtf8Bytes('1')),
+          chainId,
+          registryAddress,
+        ]
+      )
+    )
+
+    return keccak256(concat(['0x1901', domainSeparator, structHash]))
+  }
+
+  /**
+   * Changes the owner of an identity using a BLS signature.
+   *
+   * @param newOwner - The new owner address
+   * @param publicKey - The BLS12-381 public key (96 bytes)
+   * @param signature - The BLS signature bytes
+   * @param options - Transaction overrides
+   * @returns The transaction receipt
+   */
+  async changeOwnerWithPubkey(
+    newOwner: address,
+    publicKey: Uint8Array,
+    signature: Uint8Array,
+    options: Overrides = {}
+  ): Promise<TransactionReceipt> {
+    const overrides = {
+      gasLimit: 123456,
+      ...options,
+    }
+
+    const contract = await this.attachContract(overrides.from ?? undefined)
+    delete overrides.from
+
+    // Get the current nonce
+    const signer = publicKeyToAddress(publicKey)
+    const nonce = await this.contract.pubkeyNonce(signer)
+
+    const txResponse = await contract.changeOwnerWithPubkey(
+      this.address,
+      newOwner,
+      nonce,
+      publicKey,
+      signature,
+      overrides
+    )
+
+    return await txResponse.wait()
   }
 
   async addDelegate(
