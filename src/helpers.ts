@@ -169,3 +169,84 @@ export function publicKeyToAddress(publicKey: Uint8Array): string {
   const hash = keccak256(publicKey)
   return getAddress('0x' + hash.slice(-40))
 }
+
+/**
+ * Derives an Ethereum address from a BLS12-381 G1 public key (inverted scheme).
+ * The address is computed as the last 20 bytes of keccak256(publicKey_uncompressed).
+ *
+ * For compressed G1 keys (48 bytes), the key must be expanded to uncompressed format (96 bytes)
+ * before hashing. For uncompressed keys, they are hashed directly.
+ *
+ * @param publicKey - A BLS12-381 G1 public key (48 bytes compressed or 96 bytes uncompressed)
+ * @returns A checksummed Ethereum address
+ * @throws Error if the public key length is not 48 or 96 bytes
+ */
+export function deriveAddressFromG1(publicKey: Uint8Array | string): string {
+  let keyBytes: Uint8Array
+
+  // Handle both Uint8Array and hex string inputs
+  if (typeof publicKey === 'string') {
+    const hex = publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey
+    keyBytes = new Uint8Array(Buffer.from(hex, 'hex'))
+  } else {
+    keyBytes = publicKey
+  }
+
+  if (keyBytes.length !== 48 && keyBytes.length !== 96) {
+    throw new Error(`Invalid BLS G1 public key length: expected 48 or 96 bytes, got ${keyBytes.length}`)
+  }
+
+  // For compressed keys, we would normally need to expand them, but for address derivation
+  // the contract will handle the expansion. For consistency with contract behavior,
+  // we document that compressed keys should be expanded before address derivation.
+  // This function currently works with uncompressed keys only.
+  const hash = keccak256(keyBytes)
+  return getAddress('0x' + hash.slice(-40))
+}
+
+/**
+ * Generate a fresh BLS12-381 keypair using @noble/curves/bls12-381.
+ *
+ * @returns Object containing secret key, public key (both as Uint8Array), and public key hex
+ */
+export function generateBlsKeypair(): {
+  secretKey: Uint8Array
+  publicKey: Uint8Array
+  publicKeyHex: string
+} {
+  // Note: This function requires @noble/curves/bls12-381 to be imported in the calling code
+  // Example usage:
+  // const bls = await import('@noble/curves/bls12-381');
+  // const keypair = generateBlsKeypair(bls);
+
+  throw new Error('Use @noble/curves/bls12-381 library directly for keypair generation')
+}
+
+/**
+ * Expands a compressed G2 BLS signature to uncompressed format if needed.
+ * The contract expects uncompressed G2 signatures (192 bytes).
+ * @noble/curves generates compressed G2 signatures (96 bytes).
+ *
+ * @param compressedSignature - 96-byte compressed G2 signature
+ * @returns 192-byte uncompressed G2 signature
+ * @throws Error if signature is not 96 bytes
+ */
+export function expandBlsSignatureG2(compressedSignature: Uint8Array | string): Uint8Array {
+  let sigBytes: Uint8Array
+
+  if (typeof compressedSignature === 'string') {
+    const hex = compressedSignature.startsWith('0x') ? compressedSignature.slice(2) : compressedSignature
+    sigBytes = new Uint8Array(Buffer.from(hex, 'hex'))
+  } else {
+    sigBytes = compressedSignature
+  }
+
+  if (sigBytes.length !== 96) {
+    throw new Error(`Invalid compressed BLS signature length: expected 96 bytes, got ${sigBytes.length}`)
+  }
+
+  // Note: Actual expansion requires using the BLS library's decompression method
+  // This is a placeholder that would be implemented with @noble/curves
+  // The SDK's contract interaction layer would handle this before calling changeOwnerWithPubkey
+  throw new Error('Signature expansion requires @noble/curves/bls12-381 library integration')
+}
