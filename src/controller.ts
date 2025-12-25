@@ -167,46 +167,6 @@ export class EthrDidController {
     return await ownerChange.wait()
   }
 
-  /**
-   * Creates the EIP-712 hash for a changeOwnerWithPubkey operation.
-   * This hash is what gets signed by the BLS keypair.
-   *
-   * Message Structure (Simplified):
-   * - Uses 3-field structure: ChangeOwnerWithPubkey(address identity, address oldOwner, address newOwner)
-   * - No signer or nonce fields (signature proves ownership, ownership change prevents replays)
-   * - Each field serves a specific, necessary purpose:
-   *   * identity: identifies which DID is being changed
-   *   * oldOwner: the current owner at signing time (proof of authorization + replay protection)
-   *   * newOwner: the new owner address to be set
-   *
-   * Replay Protection Mechanism:
-   * - This uses owner-based replay protection instead of nonce-based
-   * - The oldOwner field is included in the signed message
-   * - If someone changes the owner, old signatures become invalid automatically
-   * - Contract enforces: require(oldOwner == identityOwner(identity))
-   * - No need to track a nonce counter - ownership state change is the replay protection
-   *
-   * How it Works:
-   * 1. Get current owner: oldOwner = await this.getOwner(identity)
-   * 2. Build message: {identity, oldOwner, newOwner}
-   * 3. Compute EIP-712 hash using domain separator and struct hash
-   * 4. Sign the hash with BLS private key
-   * 5. When contract verifies:
-   *    - Checks BLS signature is valid for the hash
-   *    - Checks oldOwner == current owner (verifies authorization + prevents replay)
-   *    - Updates owner to newOwner
-   *
-   * Security Implications:
-   * - Only the current owner can create a valid signature (via BLS key ownership check)
-   * - If owner changes between signing and submission, oldOwner check fails
-   * - Simpler than traditional nonce-based replay protection
-   * - Cleaner security model: signature proves ownership, ownership state provides replay protection
-   *
-   * @param newOwner - The new owner address to be set
-   * @returns The EIP-712 hash ready for signing with BLS private key
-   *
-   * @throws Error if no provider is configured
-   */
   async createChangeOwnerWithPubkeyHash(newOwner: address): Promise<string> {
     const oldOwner = await this.getOwner(this.address)
     const registryAddress = await this.contract.getAddress()
@@ -250,50 +210,6 @@ export class EthrDidController {
     return keccak256(concat(['0x1901', domainSeparator, structHash]))
   }
 
-  /**
-   * Changes the owner of an identity using a BLS signature.
-   *
-   * This method submits a BLS-signed owner change transaction to the EthereumDIDRegistry.
-   * The signature must be over an EIP-712 hash created with createChangeOwnerWithPubkeyHash().
-   *
-   * Message Structure:
-   * - The signature is over a message with 3 fields: (identity, oldOwner, newOwner)
-   * - oldOwner must equal the current owner at verification time
-   * - This ensures only the current owner can change ownership
-   *
-   * Replay Protection:
-   * - Signatures use owner-based replay protection
-   * - The oldOwner field in the signed message must match the current owner
-   * - If ownership changes, the old signature is automatically invalid
-   * - Example: if Alice signs "change from alice to bob", and Bob becomes owner,
-   *   the signature is no longer valid because oldOwner (alice) != currentOwner (bob)
-   * - No nonce counter is needed - ownership state change provides the protection
-   *
-   * Transaction Flow:
-   * 1. Controller calls this method with newOwner, publicKey, signature
-   * 2. Fetches current owner: oldOwner = await this.getOwner(identity)
-   * 3. Submits transaction: contract.changeOwnerWithPubkey(identity, oldOwner, newOwner, publicKey, signature)
-   * 4. Contract verifies:
-   *    - BLS signature is valid
-   *    - oldOwner matches current owner (prevents use after ownership change)
-   *    - newOwner is not address(0)
-   * 5. If all checks pass, owner is updated to newOwner
-   *
-   * Error Handling:
-   * - "bad_signature": BLS signature verification failed
-   * - "invalid_owner": oldOwner does not match current owner (possibly due to ownership change)
-   * - "unauthorized": signer derived from publicKey is not the current owner
-   * - "invalid_new_owner": newOwner is address(0)
-   * - "unsupported_pubkey_type": publicKey length is not 96 bytes
-   *
-   * @param newOwner - The new owner address to be set
-   * @param publicKey - The BLS12-381 public key (96 bytes for G2 point)
-   * @param signature - The BLS signature bytes over the EIP-712 hash
-   * @param options - Transaction overrides (gasLimit, from, etc.)
-   * @returns The transaction receipt confirming the owner change
-   *
-   * @throws Error if owner change fails or if transaction is not confirmed
-   */
   async changeOwnerWithPubkey(
     newOwner: address,
     publicKey: Uint8Array,
