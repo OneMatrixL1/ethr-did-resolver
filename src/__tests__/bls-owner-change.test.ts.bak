@@ -113,7 +113,7 @@ describe('BLS Owner Change with Simplified EIP-712', () => {
 
       // Test the controller's ability to compute the correct hash
       const publicKey = new Uint8Array(96)
-      const hash = await controller.createChangeOwnerWithPubkeyHash(newOwnerAddress)
+      const hash = await controller.createChangeOwnerWithPubkeyHash(newOwnerAddress, publicKey)
       expect(hash).toMatch(/^0x[a-f0-9]{64}$/)
     })
 
