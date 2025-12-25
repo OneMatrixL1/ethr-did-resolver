@@ -1,0 +1,129 @@
+export const AdminManagement = {
+  _format: 'hh-sol-artifact-1',
+  contractName: 'AdminManagement',
+  sourceName: 'contracts/AdminManagement.sol',
+  abi: [
+    {
+      inputs: [],
+      stateMutability: 'nonpayable',
+      type: 'constructor',
+    },
+    {
+      inputs: [],
+      name: 'NotOwner',
+      type: 'error',
+    },
+    {
+      inputs: [],
+      name: 'ZeroAddress',
+      type: 'error',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'user',
+          type: 'address',
+        },
+        {
+          indexed: false,
+          internalType: 'bool',
+          name: 'isAdmin',
+          type: 'bool',
+        },
+      ],
+      name: 'AdminStatusChanged',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'previousOwner',
+          type: 'address',
+        },
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'newOwner',
+          type: 'address',
+        },
+      ],
+      name: 'OwnershipTransferred',
+      type: 'event',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'user',
+          type: 'address',
+        },
+      ],
+      name: 'isAdmin',
+      outputs: [
+        {
+          internalType: 'bool',
+          name: '',
+          type: 'bool',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'owner',
+      outputs: [
+        {
+          internalType: 'address',
+          name: '',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'user',
+          type: 'address',
+        },
+        {
+          internalType: 'bool',
+          name: 'status',
+          type: 'bool',
+        },
+      ],
+      name: 'setAdmin',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'newOwner',
+          type: 'address',
+        },
+      ],
+      name: 'transferOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+  ],
+  bytecode:
+    '0x608080604052346069573360018060a01b03196001541617600155335f525f60205260405f20600160ff19825416179055600181527fc63c72d6995119c079ef24c02679d49838905c8e81df9e632011b914e6f592f660203392a260405161029d908161006e8239f35b5f80fdfe6080806040526004361015610012575f80fd5b5f3560e01c90816324d7806c14610219575080634b0bddd2146101925780638da5cb5b1461016c5763f2fde38b14610048575f80fd5b3461016857602036600319011261016857610061610251565b600154906001600160a01b03821690813303610140576001600160a01b0316918215610118577fc63c72d6995119c079ef24c02679d49838905c8e81df9e632011b914e6f592f691837fffffffffffffffffffffffff00000000000000000000000000000000000000006020931617600155835f525f825260405f20600160ff1982541617905583604051917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e05f80a360018152a2005b7fd92e233d000000000000000000000000000000000000000000000000000000005f5260045ffd5b7f30cd7471000000000000000000000000000000000000000000000000000000005f5260045ffd5b5f80fd5b34610168575f3660031901126101685760206001600160a01b0060015416604051908152f35b34610168576040366003190112610168576101ab610251565b60243590811515809203610168576001600160a01b036001541633036101405760206001600160a01b037fc63c72d6995119c079ef24c02679d49838905c8e81df9e632011b914e6f592f6921692835f525f825260405f2060ff1981541660ff8316179055604051908152a2005b34610168576020366003190112610168576020906001600160a01b0361023d610251565b165f525f825260ff60405f20541615158152f35b600435906001600160a01b03821682036101685756fea2646970667358221220ad54a4b74cef499da3fc85ab78d2305b4b8fb40b1557826668146326eb61bf1564736f6c634300081c0033',
+  deployedBytecode:
+    '0x6080806040526004361015610012575f80fd5b5f3560e01c90816324d7806c14610219575080634b0bddd2146101925780638da5cb5b1461016c5763f2fde38b14610048575f80fd5b3461016857602036600319011261016857610061610251565b600154906001600160a01b03821690813303610140576001600160a01b0316918215610118577fc63c72d6995119c079ef24c02679d49838905c8e81df9e632011b914e6f592f691837fffffffffffffffffffffffff00000000000000000000000000000000000000006020931617600155835f525f825260405f20600160ff1982541617905583604051917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e05f80a360018152a2005b7fd92e233d000000000000000000000000000000000000000000000000000000005f5260045ffd5b7f30cd7471000000000000000000000000000000000000000000000000000000005f5260045ffd5b5f80fd5b34610168575f3660031901126101685760206001600160a01b0060015416604051908152f35b34610168576040366003190112610168576101ab610251565b60243590811515809203610168576001600160a01b036001541633036101405760206001600160a01b037fc63c72d6995119c079ef24c02679d49838905c8e81df9e632011b914e6f592f6921692835f525f825260405f2060ff1981541660ff8316179055604051908152a2005b34610168576020366003190112610168576020906001600160a01b0361023d610251565b165f525f825260ff60405f20541615158152f35b600435906001600160a01b03821682036101685756fea2646970667358221220ad54a4b74cef499da3fc85ab78d2305b4b8fb40b1557826668146326eb61bf1564736f6c634300081c0033',
+  linkReferences: {},
+  deployedLinkReferences: {},
+}
