@@ -155,24 +155,6 @@ export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
 }
 
 /**
- * Generate a fresh BLS12-381 keypair using @noble/curves/bls12-381.
- *
- * @returns Object containing secret key, public key (both as Uint8Array), and public key hex
- */
-export function generateBlsKeypair(): {
-  secretKey: Uint8Array
-  publicKey: Uint8Array
-  publicKeyHex: string
-} {
-  // Note: This function requires @noble/curves/bls12-381 to be imported in the calling code
-  // Example usage:
-  // const bls = await import('@noble/curves/bls12-381');
-  // const keypair = generateBlsKeypair(bls);
-
-  throw new Error('Use @noble/curves/bls12-381 library directly for keypair generation')
-}
-
-/**
  * Expands a compressed G2 BLS signature to uncompressed format if needed.
  * The contract expects uncompressed G2 signatures (192 bytes).
  * @noble/curves generates compressed G2 signatures (96 bytes).
