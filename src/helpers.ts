@@ -1,5 +1,5 @@
 import { VerificationMethod } from 'did-resolver'
-import { computeAddress, getAddress, keccak256, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
+import { computeAddress, getAddress, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
