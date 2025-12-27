@@ -153,32 +153,3 @@ export enum Errors {
 export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
   return arg !== null && typeof arg !== 'undefined'
 }
-
-/**
- * Expands a compressed G2 BLS signature to uncompressed format if needed.
- * The contract expects uncompressed G2 signatures (192 bytes).
- * @noble/curves generates compressed G2 signatures (96 bytes).
- *
- * @param compressedSignature - 96-byte compressed G2 signature
- * @returns 192-byte uncompressed G2 signature
- * @throws Error if signature is not 96 bytes
- */
-export function expandBlsSignatureG2(compressedSignature: Uint8Array | string): Uint8Array {
-  let sigBytes: Uint8Array
-
-  if (typeof compressedSignature === 'string') {
-    const hex = compressedSignature.startsWith('0x') ? compressedSignature.slice(2) : compressedSignature
-    sigBytes = new Uint8Array(Buffer.from(hex, 'hex'))
-  } else {
-    sigBytes = compressedSignature
-  }
-
-  if (sigBytes.length !== 96) {
-    throw new Error(`Invalid compressed BLS signature length: expected 96 bytes, got ${sigBytes.length}`)
-  }
-
-  // Note: Actual expansion requires using the BLS library's decompression method
-  // This is a placeholder that would be implemented with @noble/curves
-  // The SDK's contract interaction layer would handle this before calling changeOwnerWithPubkey
-  throw new Error('Signature expansion requires @noble/curves/bls12-381 library integration')
-}
