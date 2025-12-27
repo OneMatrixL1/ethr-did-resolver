@@ -155,40 +155,6 @@ export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
 }
 
 /**
- * Derives an Ethereum address from a BLS12-381 G1 public key (inverted scheme).
- * The address is computed as the last 20 bytes of keccak256(publicKey_uncompressed).
- *
- * For compressed G1 keys (48 bytes), the key must be expanded to uncompressed format (96 bytes)
- * before hashing. For uncompressed keys, they are hashed directly.
- *
- * @param publicKey - A BLS12-381 G1 public key (48 bytes compressed or 96 bytes uncompressed)
- * @returns A checksummed Ethereum address
- * @throws Error if the public key length is not 48 or 96 bytes
- */
-export function deriveAddressFromG1(publicKey: Uint8Array | string): string {
-  let keyBytes: Uint8Array
-
-  // Handle both Uint8Array and hex string inputs
-  if (typeof publicKey === 'string') {
-    const hex = publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey
-    keyBytes = new Uint8Array(Buffer.from(hex, 'hex'))
-  } else {
-    keyBytes = publicKey
-  }
-
-  if (keyBytes.length !== 48 && keyBytes.length !== 96) {
-    throw new Error(`Invalid BLS G1 public key length: expected 48 or 96 bytes, got ${keyBytes.length}`)
-  }
-
-  // For compressed keys, we would normally need to expand them, but for address derivation
-  // the contract will handle the expansion. For consistency with contract behavior,
-  // we document that compressed keys should be expanded before address derivation.
-  // This function currently works with uncompressed keys only.
-  const hash = keccak256(keyBytes)
-  return getAddress('0x' + hash.slice(-40))
-}
-
-/**
  * Generate a fresh BLS12-381 keypair using @noble/curves/bls12-381.
  *
  * @returns Object containing secret key, public key (both as Uint8Array), and public key hex
