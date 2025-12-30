@@ -167,14 +167,19 @@ export class EthrDidController {
     return await ownerChange.wait()
   }
 
+  async getNetwork() {
+    const runner = this.contract.runner
+    if (!runner) throw new Error('No runner configured')
+    const provider = 'provider' in runner ? runner.provider : runner
+    if (!provider) throw new Error('No provider configured')
+    return await provider.getNetwork()
+  }
+
   async createChangeOwnerWithPubkeyHash(newOwner: address): Promise<string> {
     const oldOwner = await this.getOwner(this.address)
     const registryAddress = await this.contract.getAddress()
 
-    // Get chain ID
-    const provider = this.contract.runner?.provider
-    if (!provider) throw new Error('No provider configured')
-    const network = await provider.getNetwork()
+    const network = await this.getNetwork()
     const chainId = network.chainId
 
     // Build the message
@@ -217,7 +222,6 @@ export class EthrDidController {
     options: Overrides = {}
   ): Promise<TransactionReceipt> {
     const overrides = {
-      gasLimit: 123456,
       ...options,
     }
 
