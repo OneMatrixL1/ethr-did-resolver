@@ -175,8 +175,17 @@ export class EthrDidController {
     return await provider.getNetwork()
   }
 
-  async createChangeOwnerWithPubkeyHash(newOwner: address): Promise<string> {
-    const oldOwner = await this.getOwner(this.address)
+  /**
+   * Create the EIP-712 hash for changing owner with public key.
+   *
+   * @param newOwner - the address of the new owner
+   * @param oldOwner - optional - the address of the current owner.
+   *   For Dual DIDs, this should be the secp256 address from the identity to ensure hash consistency.
+   *
+   * @remarks Support Dual DID: allows passing explicit oldOwner to match contract expectations.
+   */
+  async createChangeOwnerWithPubkeyHash(newOwner: address, oldOwner?: address): Promise<string> {
+    const resolvedOldOwner = oldOwner || await this.getOwner(this.address)
     const registryAddress = await this.contract.getAddress()
 
     const network = await this.getNetwork()
@@ -185,7 +194,7 @@ export class EthrDidController {
     // Build the message
     const message = {
       identity: this.address,
-      oldOwner,
+      oldOwner: resolvedOldOwner,
       newOwner,
     }
 
