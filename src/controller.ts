@@ -1,6 +1,7 @@
 import {
   Addressable,
   AddressLike,
+  AbiCoder,
   BlockTag,
   concat,
   Contract,
@@ -164,6 +165,82 @@ export class EthrDidController {
       overrides
     )
     return await ownerChange.wait()
+  }
+
+  async getNetwork() {
+    const runner = this.contract.runner
+    if (!runner) throw new Error('No runner configured')
+    const provider = 'provider' in runner ? runner.provider : runner
+    if (!provider) throw new Error('No provider configured')
+    return await provider.getNetwork()
+  }
+
+  async createChangeOwnerWithPubkeyHash(newOwner: address): Promise<string> {
+    const oldOwner = await this.getOwner(this.address)
+    const registryAddress = await this.contract.getAddress()
+
+    const network = await this.getNetwork()
+    const chainId = network.chainId
+
+    // Build the message
+    const message = {
+      identity: this.address,
+      oldOwner,
+      newOwner,
+    }
+
+    // Compute the hash using EIP-712
+    const coder = AbiCoder.defaultAbiCoder()
+    const typeHash = keccak256(toUtf8Bytes('ChangeOwnerWithPubkey(address identity,address oldOwner,address newOwner)'))
+    const structHash = keccak256(
+      coder.encode(
+        ['bytes32', 'address', 'address', 'address'],
+        [typeHash, message.identity, message.oldOwner, message.newOwner]
+      )
+    )
+
+    const domainSeparator = keccak256(
+      coder.encode(
+        ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+        [
+          keccak256(toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
+          keccak256(toUtf8Bytes('EthereumDIDRegistry')),
+          keccak256(toUtf8Bytes('1')),
+          chainId,
+          registryAddress,
+        ]
+      )
+    )
+
+    return keccak256(concat(['0x1901', domainSeparator, structHash]))
+  }
+
+  async changeOwnerWithPubkey(
+    newOwner: address,
+    publicKey: Uint8Array,
+    signature: Uint8Array,
+    options: Overrides = {}
+  ): Promise<TransactionReceipt> {
+    const overrides = {
+      ...options,
+    }
+
+    const contract = await this.attachContract(overrides.from ?? undefined)
+    delete overrides.from
+
+    // Get the current owner for the signature
+    const oldOwner = await this.getOwner(this.address)
+
+    const txResponse = await contract.changeOwnerWithPubkey(
+      this.address,
+      oldOwner,
+      newOwner,
+      publicKey,
+      signature,
+      overrides
+    )
+
+    return await txResponse.wait()
   }
 
   async addDelegate(
